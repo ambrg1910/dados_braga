@@ -1,0 +1,65 @@
+services:
+  - type: web
+    name: card-operations-backend
+    env: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromDatabase:
+          name: card-operations-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: card-operations-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: card-operations-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: card-operations-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: card-operations-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: card-operations-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: card-operations-backend
+          property: url
+
+  - type: web
+    name: card-operations-frontend-vite
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: card-operations-backend
+          property: url
+
+databases:
+  - name: card-operations-db
+    databaseName: card_operations
+    user: postgres
+    plan: starter

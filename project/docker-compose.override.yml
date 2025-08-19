@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  backend:
+    restart: on-failure
+    environment:
+      - DOCKER_INSECURE_NO_IPTABLES_RAW=1
+
+  frontend:
+    restart: on-failure
+    environment:
+      - DOCKER_INSECURE_NO_IPTABLES_RAW=1

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://backend:3001
+      - VITE_WS_URL=ws://backend:3001
+    depends_on:
+      - backend
+    networks:
+      - card-operations-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=card_operations
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=your-production-jwt-secret-change-this
+    depends_on:
+      - postgres
+    networks:
+      - card-operations-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=card_operations
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - card-operations-network
+
+volumes:
+  postgres_data:
+
+networks:
+  card-operations-network:
+    driver: bridge

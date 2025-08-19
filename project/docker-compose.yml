@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: card-operations-db
+    environment:
+      POSTGRES_DB: card_operations
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - card-operations-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: card-operations-backend
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=card_operations
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=your_jwt_secret_key
+      - JWT_EXPIRATION=24h
+      - UPLOAD_DIR=./uploads
+      - LOG_LEVEL=info
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - card-operations-network
+    command: >  
+      sh -c "npm install && 
+             npx sequelize-cli db:migrate && 
+             npx sequelize-cli db:seed:all && 
+             npm start"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: card-operations-frontend
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - card-operations-network
+    command: npm run dev
+
+networks:
+  card-operations-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
